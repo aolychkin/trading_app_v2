@@ -12,9 +12,24 @@ import internal.services.learning.ml_model as mlm
 import internal.services.learning.preprocessing as prep
 import internal.services.learning.prediction as predict
 
+# классификация
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import GradientBoostingClassifier
+from lightgbm import LGBMClassifier
+from xgboost.sklearn import XGBClassifier
+
+from sklearn.metrics import accuracy_score as acc
 
 if __name__ == '__main__':
   df_predict = predict.make_prediction()
+  df_normal_data = prep.make_normal_data()
   df_normal_data = prep.get_normal_data()
 
   df = df_predict.merge(df_normal_data, on='candle_id')
@@ -27,11 +42,12 @@ if __name__ == '__main__':
 
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=17)
 
-  model = mlm.create_model_SVC("lgbm", X_train, y_train.ravel())
+  model = mlm.create_model_SVC("xgbc", X_train, y_train.ravel())
 
   # Оценка производительности модели
   mlm.model_score(model, X_test, y_test)
 
   # Сохранение модели
-  # 0.7098711614840647
-  joblib.dump(model, "./models/val_model_2.pkl")
+  # main: lgbm = 0.8446
+  # validation: xgbc=0.8485
+  joblib.dump(model, "./ml_models/val_model_4.pkl")
