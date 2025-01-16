@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from ta.trend import ADXIndicator, EMAIndicator, MACD
-from ta.momentum import RSIIndicator
+from ta.momentum import RSIIndicator, StochRSIIndicator
 
 
 def w_session(day):
@@ -18,13 +18,13 @@ def w_session(day):
 
   # Основная торговая сессия: 7:00 – 16:00 utc.
   s_main = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
-  f_main = datetime(2024, 12, 2, 15, 30).strftime("%H:%M")
+  f_main = datetime(2024, 12, 2, 15, 40).strftime("%H:%M")
   # TODO: понять, что делать с последними 10 минутами графика, которые я могу предсказать, но не могу использовать
   # В 15:40 начинается снятие заявок
 
   # Дополнительная торговая сессия: 16:00 – 20:50 utc.
-  s_evening = datetime(2024, 12, 1, 16, 00).strftime("%H:%M")
-  f_evening = datetime(2024, 12, 3, 20, 50).strftime("%H:%M")
+  s_evening = datetime(2024, 12, 1, 16, 10).strftime("%H:%M")
+  f_evening = datetime(2024, 12, 3, 20, 48).strftime("%H:%M")
 
   # 1–2 января, 7 января, 23 февраля, 8 марта, 1 мая, 9 мая, 12 июня, 4 ноября 2024 года
   weekday = day.isoweekday()
@@ -70,33 +70,30 @@ def w_session(day):
 
 
 def ta_ind_minute(df):
-  ta_ADX = ADXIndicator(
-      high=df["high"], low=df["low"], close=df["close"], window=9, fillna=False)
-  ta_MACD = MACD(
-      close=df["close"], window_fast=12, window_slow=24, window_sign=10, fillna=False)
+  ta_ADX = ADXIndicator(high=df["high"], low=df["low"], close=df["close"], window=9, fillna=False)
+  ta_MACD = MACD(close=df["close"], window_fast=12, window_slow=24, window_sign=10, fillna=False)
 
   df["ADX9"] = ta_ADX.adx()
   df["ADX9_pos"] = ta_ADX.adx_pos()
   df["ADX9_neg"] = ta_ADX.adx_neg()
   print("ADX сохранен в df")
 
-  df["EMA24_op"] = EMAIndicator(
-      close=df["open"], window=24, fillna=False).ema_indicator()
-  df["EMA24_hi"] = EMAIndicator(
-      close=df["high"], window=24, fillna=False).ema_indicator()
-  df["EMA24_low"] = EMAIndicator(
-      close=df["low"], window=24, fillna=False).ema_indicator()
-  df["EMA24_cl"] = EMAIndicator(
-      close=df["close"], window=24, fillna=False).ema_indicator()
-  df["EMA9_vol"] = EMAIndicator(
-      close=df["volume"], window=9, fillna=False).ema_indicator()
+  df["EMA24_op"] = EMAIndicator(close=df["open"], window=24, fillna=False).ema_indicator()
+  df["EMA24_hi"] = EMAIndicator(close=df["high"], window=24, fillna=False).ema_indicator()
+  df["EMA24_low"] = EMAIndicator(close=df["low"], window=24, fillna=False).ema_indicator()
+  df["EMA24_cl"] = EMAIndicator(close=df["close"], window=24, fillna=False).ema_indicator()
+  df["EMA9_vol"] = EMAIndicator(close=df["volume"], window=9, fillna=False).ema_indicator()
   print("EMA сохранен в df")
 
   df["MACD10_signal"] = ta_MACD.macd_signal()
   df["MACD12_24"] = ta_MACD.macd()
+  df["MACD_hist"] = ta_MACD.macd_diff()
   print("MACD сохранен в df")
 
   df["RSI9"] = RSIIndicator(close=df["close"], window=9, fillna=False).rsi()
+  df["StochRSI9"] = StochRSIIndicator(close=df["close"], window=9, smooth1=3, smooth2=3, fillna=False).stochrsi()
+  df["StochRSI9_k"] = StochRSIIndicator(close=df["close"], window=9, smooth1=3, smooth2=3, fillna=False).stochrsi_k()
+  df["StochRSI9_d"] = StochRSIIndicator(close=df["close"], window=9, smooth1=3, smooth2=3, fillna=False).stochrsi_d()
   print("RSI сохранен в df")
 
   df.index += 1  # синхранизируем с id бд
@@ -117,23 +114,22 @@ def ta_ind_hour(df):
   df["ADX14_neg"] = ta_ADX.adx_neg()
   print("ADX сохранен в df")
 
-  df["EMA20_op"] = EMAIndicator(
-      close=df["open"], window=20, fillna=False).ema_indicator()
-  df["EMA20_hi"] = EMAIndicator(
-      close=df["high"], window=20, fillna=False).ema_indicator()
-  df["EMA20_low"] = EMAIndicator(
-      close=df["low"], window=20, fillna=False).ema_indicator()
-  df["EMA20_cl"] = EMAIndicator(
-      close=df["close"], window=20, fillna=False).ema_indicator()
-  df["EMA9_vol"] = EMAIndicator(
-      close=df["volume"], window=9, fillna=False).ema_indicator()
+  df["EMA20_op"] = EMAIndicator(close=df["open"], window=20, fillna=False).ema_indicator()
+  df["EMA20_hi"] = EMAIndicator(close=df["high"], window=20, fillna=False).ema_indicator()
+  df["EMA20_low"] = EMAIndicator(close=df["low"], window=20, fillna=False).ema_indicator()
+  df["EMA20_cl"] = EMAIndicator(close=df["close"], window=20, fillna=False).ema_indicator()
+  df["EMA9_vol"] = EMAIndicator(close=df["volume"], window=9, fillna=False).ema_indicator()
   print("EMA сохранен в df")
 
   df["MACD9_signal"] = ta_MACD.macd_signal()
   df["MACD12_26"] = ta_MACD.macd()
+  df["MACD_hist"] = ta_MACD.macd_diff()
   print("MACD сохранен в df")
 
   df["RSI14"] = RSIIndicator(close=df["close"], window=14, fillna=False).rsi()
+  df["StochRSI14"] = StochRSIIndicator(close=df["close"], window=14, smooth1=3, smooth2=3, fillna=False).stochrsi()
+  df["StochRSI14_k"] = StochRSIIndicator(close=df["close"], window=14, smooth1=3, smooth2=3, fillna=False).stochrsi_k()
+  df["StochRSI14_d"] = StochRSIIndicator(close=df["close"], window=14, smooth1=3, smooth2=3, fillna=False).stochrsi_d()
   print("RSI сохранен в df")
 
   df.index += 1  # синхранизируем с id бд

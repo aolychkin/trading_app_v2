@@ -145,3 +145,17 @@ gamma=0.2: 0.8109
   # profile = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.8, stop_loss=0.016, take_profit=0.003, target="target")
   # profile = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.8, stop_loss=0.016, take_profit=0.005, target="target")
   # profile = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.8, stop_loss=0.01, take_profit=0.005, target="target")
+
+
+
+# lgbm NEW
+
+## Default
+0.8796
+
+0.8816
+
+8865
+
+0.8883
+0.8896

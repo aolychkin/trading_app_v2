@@ -28,13 +28,22 @@ def cross(s_down, f_down, s_up, f_up):  # down должен пересекать
     n = (y3 - y1) / (y3 - y4)
 
   dot2 = y3 + (y4 - y3) * n
-  if (1 <= dot2 <= 2):
-    if (dot2 == 2):
-      down_up = 1 if (s_down/s_up-1 < 0) else 0
-    elif (dot2 == 1):
-      down_up = 1 if (f_down/f_up-1 > 0) else 0
+  if (0.9 <= dot2 <= 2.1):
+    if (dot2 >= 2):
+      if s_up == 0:
+        down_up = 0
+      else:
+        down_up = 1 if (s_down/s_up-1 < 0) else 0
+    elif (dot2 <= 1):
+      if f_up == 0:
+        down_up = 0
+      else:
+        down_up = 1 if (f_down/f_up-1 > 0) else 0
     else:
-      down_up = 1 if (s_down/s_up-1 < 0) else 0
+      if s_down == 0:
+        down_up = 0
+      else:
+        down_up = 1 if (f_down/s_down-1 > 0) else 0
   else:
     down_up = -1
 
@@ -46,7 +55,106 @@ def cross(s_down, f_down, s_up, f_up):  # down должен пересекать
     return 0
 
 
-def macd(df, type="min"):
+def macd_cond(row):
+  power = np.abs(row["MACD"] - row["MACD_signal"])
+  if row['cross_type'] == 0:
+    if (row["hist_pred"] > 0):
+      return 1 - power
+    elif (row["hist_pred"] < 0):
+      return -1 + power
+  else:
+    if row['cross_type'] == 1:
+      return 1 + power
+    else:
+      return -1 - power
+
+
+def macd(df, type="min", debug=False):
+  df.insert(loc=1, column='MACD_signal_pred', value=df["MACD_signal"].shift(1))
+  df.insert(loc=3, column='MACD_pred', value=df["MACD"].shift(1))
+  df["hist_pred"] = df["MACD_hist"].shift(1)
+  df["cross_type"] = df.apply(lambda row: cross(row["MACD_pred"], row["MACD"], row["MACD_signal_pred"], row["MACD_signal"]), axis=1)
+  # df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["MACD_hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["MACD_hist"] > 0) else 0, axis=1)
+  df["power"] = df.apply(macd_cond, axis=1)
+
+  if debug:
+    print(tabulate(df.loc[220:250], headers='keys', tablefmt='psql'))
+    print(df[df['power'] == df['power'].min()])
+    print(df[df['power'] == df['power'].max()])
+
+  print("MACD:", df["power"].min(), df["power"].max())
+  df.rename(columns={"power": f"MACD_{type}"}, inplace=True)
+  return (df[["id", f"MACD_{type}"]].copy())
+
+
+def rsi(df, type="min", debug=False):
+  df.insert(loc=1, column='RSI_K_pred', value=df["RSI_K"].shift(1))
+  df.insert(loc=3, column='RSI_D_pred', value=df["RSI_D"].shift(1))
+  df["cross_type"] = df.apply(lambda row: cross(row["RSI_K_pred"], row["RSI_K"], row["RSI_D_pred"], row["RSI_D"]), axis=1)
+  df["tmp_power"] = df.apply(lambda row: 1 if (row["RSI_K"] <= 0.25 or row["RSI_D"] <= 0.25) and row["cross_type"] == 1 else -1 if (row["RSI_K"] >= 0.75 or row["RSI_D"] >= 0.75) and row["cross_type"] == -1 else 0, axis=1)
+  df["hist"] = df.apply(lambda row: row["RSI_K"] - row["RSI_D"], axis=1)
+  df["power"] = df.apply(lambda row: row["hist"] if row["tmp_power"] == 0 else 1+row["hist"] if row["tmp_power"] == 1 else -1+row["hist"], axis=1)
+
+  if debug:
+    print(tabulate(df.loc[220:250], headers='keys', tablefmt='psql'))
+    print(df[df['power'] == df['power'].min()])
+    print(df[df['power'] == df['power'].max()])
+
+  print("RSI:", df["power"].min(), df["power"].max())
+  df.rename(columns={"power": f"RSI_{type}"}, inplace=True)
+  return (df[["id", f"RSI_{type}"]].copy())
+
+
+def adx(df, type="min", debug=False):  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
+  df.insert(loc=1, column='ADX_pred', value=df["ADX"].shift(1))
+  df["hist"] = df.apply(lambda row: row["ADX"] - row["ADX_pred"], axis=1)
+  df["power"] = df.apply(lambda row: 1+np.abs((row["ADX"] / row["ADX_pred"] - 1)) if row["ADX"] >= 25 else -1-np.abs((row["ADX"] / row["ADX_pred"] - 1)), axis=1)
+
+  if debug:
+    print(tabulate(df.loc[220:250], headers='keys', tablefmt='psql'))
+    print(df[df['power'] == df['power'].min()])
+    print(df[df['power'] == df['power'].max()])
+
+  print("ADX:", df["power"].min(), df["power"].max())
+  df.rename(columns={"power": f"ADX_{type}"}, inplace=True)
+  return (df[["id", f"ADX_{type}"]].copy())
+
+
+def ema_cond(row):
+  power = np.abs(np.mean([row["close_pred"], row["close"]]) / np.mean([row["EMA_pred"], row["EMA"]])-1) * 100
+  if row['cross_type'] == 0:
+    if (row["hist_pred"] > 0):
+      return 1 - power
+    elif (row["hist_pred"] < 0):
+      return -1 + power
+  else:
+    if row['cross_type'] == 1:
+      return 1 + power
+    else:
+      return -1 - power
+
+
+def ema(df, type="min", debug=False):
+  df.insert(loc=1, column='close_pred', value=df["close"].shift(1))
+  df.insert(loc=3, column='EMA_pred', value=df["EMA"].shift(1))
+  df["hist"] = df.apply(lambda row: (row["close"] / row["EMA"]) - 1, axis=1)
+  df["hist_pred"] = df["hist"].shift(1)
+  df["cross_type"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else 0, axis=1)
+  df["power"] = df.apply(ema_cond, axis=1)
+  # df["power"] = df.apply(lambda row: row["hist"] if row["cross_type"] == 0 else 1+row["hist"] if row["cross_type"] == 1 else -1+row["hist"], axis=1)
+  # np.abs(np.mean([df.loc[i, "close_pred"], df.loc[i, "close"]]) / np.mean([df.loc[i, "EMA_pred"], df.loc[i, "EMA"]])-1) * 100
+
+  if debug:
+    print(tabulate(df.loc[220:250], headers='keys', tablefmt='psql'))
+    print(df[df['power'] == df['power'].min()])
+    print(df[df['power'] == df['power'].max()])
+
+  print("EMA:", df["power"].min(), df["power"].max())
+  df.rename(columns={"power": f"EMA_{type}"}, inplace=True)
+  return (df[["id", f"EMA_{type}"]].copy())
+
+
+def macd_hard(df, type="min"):
   df.insert(loc=0, column='MACD_signal_pred', value=df["MACD_signal"].shift(1))
   df.insert(loc=2, column='MACD_pred', value=df["MACD"].shift(1))
   df["cross_type"] = df.apply(lambda row: cross(row["MACD_pred"], row["MACD"], row["MACD_signal_pred"], row["MACD_signal"]), axis=1)
@@ -69,15 +177,12 @@ def macd(df, type="min"):
         df.loc[i, 'power'] = -1 - power
         df.loc[i, 'tmp_power'] = -1 - power
 
-  # print(df["power"].head())
-  # print(tabulate(df.loc[220:270], headers='keys', tablefmt='psql'))
-  # print(df["cross_type"].value_counts())
   print("MACD:", df["power"].min(), df["power"].max())
   df.rename(columns={"power": f"MACD_{type}"}, inplace=True)
   return (df[["id", f"MACD_{type}"]].copy())
 
 
-def rsi(df, type="min"):
+def rsi_hard(df, type="min"):
   df.insert(loc=0, column='RSI_pred', value=df["RSI"].shift(1))
   df["cross_type"] = df.apply(lambda row: cross(row["RSI_pred"], row["RSI"], 70, 70), axis=1)
   df["counter"] = 0
@@ -113,7 +218,7 @@ def rsi(df, type="min"):
   return (df[["id", f"RSI_{type}"]].copy())
 
 
-def adx(df, type="min"):  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
+def adx_hard(df, type="min"):  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
   df.insert(loc=0, column='ADX_pred', value=df["ADX"].shift(1))
   for i in tqdm(range(1, len(df))):
     if (df.loc[i, 'ADX_pred'] == 0):
@@ -129,11 +234,7 @@ def adx(df, type="min"):  # Растущий и высокий тренд (бо�
   return (df[["id", f"ADX_{type}"]].copy())
 
 
-def params_minute(df):
-  pass
-
-
-def ema(df, type="min"):
+def ema_hard(df, type="min"):
   df.insert(loc=0, column='EMA_pred', value=df["EMA"].shift(1))
   df.insert(loc=2, column='close_pred', value=df["close"].shift(1))
   df["cross_type"] = df.apply(lambda row: cross(row["close_pred"], row["close"], row["EMA_pred"], row["EMA"]), axis=1)

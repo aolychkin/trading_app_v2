@@ -41,7 +41,8 @@ def load_candles(years):
                     is_complete=candle.is_complete
                 )
                 session.add(data)
-            time.sleep(0.5)
+            time.sleep(1)
+          time.sleep(1)
         session.commit()
 
 
@@ -54,4 +55,4 @@ if __name__ == '__main__':
     print("[services.data] Table drop error")
   models.Base.metadata.create_all(engine)
 
-  load_candles(range(2024, 2025))
+  load_candles(range(2019, 2025))
