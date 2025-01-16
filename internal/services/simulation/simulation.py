@@ -24,8 +24,8 @@ if __name__ == '__main__':
 
   # print(tabulate(df_model.iloc[0:200], headers='keys', tablefmt='psql'))
 
-  model = joblib.load("./ml_models/main_model_1.pkl")
-  val_model = joblib.load("./ml_models/val_model_1.pkl")
+  model = joblib.load("./ml_models/main_model_2.pkl")
+  val_model = joblib.load("./ml_models/val_model_2.pkl")
   counter = 0
   for index, x in enumerate(X):
     df_model.loc[index, ["0", "target"]] = (

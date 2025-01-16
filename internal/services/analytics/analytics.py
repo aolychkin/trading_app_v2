@@ -48,22 +48,21 @@ def test_pacf(ts):  # Принимает 1 параметр Графика + tim
 def calc_min(candles):
   ind = indicators.ta_ind_minute(candles.copy())
   macd = params.macd(ind.rename(columns={"MACD10_signal": "MACD_signal", "MACD12_24": "MACD"})[["id", "MACD_signal", "MACD"]].copy())
-  print(tabulate(macd.iloc[40:100], headers='keys', tablefmt='psql'))  # 933
-  # rsi = params.rsi(ind.rename(columns={"RSI9": "RSI"})[["id", "RSI"]].copy())
-  # adx = params.adx(ind.rename(columns={"ADX9": "ADX"})[["id", "ADX"]].copy())
-  # ema = params.ema(ind.rename(columns={"EMA24_cl": "EMA"})[["id", "close", "EMA"]].copy())
-  # df_m = ind.merge(macd, on='id').merge(rsi, on='id').merge(adx, on='id').merge(ema, on='id')
-  # df_m.insert(loc=2, column='session', value=df_m["time"].apply(lambda x: indicators.w_session(x)))
-  # df_m["oc_min"] = df_m["close"] / df_m["open"] - 1
-  # df_m["DI_min"] = df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1
-  # df_m["vEMA_min"] = df_m["volume"] / df_m["EMA9_vol"] - 1
-  # df_m["op_min"] = df_m["open"] - df_m["EMA24_op"]
-  # df_m["hi_min"] = df_m["high"] - df_m["EMA24_hi"]
-  # df_m["low_min"] = df_m["low"] - df_m["EMA24_low"]
-  # df_m["cl_min"] = df_m["close"] - df_m["EMA24_cl"]
-  # df_m.drop(df_m.columns.values[3:19], axis=1, inplace=True)
-  # df_m.drop(range(0, 933), inplace=True)
-  # return df_m
+  rsi = params.rsi(ind.rename(columns={"RSI9": "RSI"})[["id", "RSI"]].copy())
+  adx = params.adx(ind.rename(columns={"ADX9": "ADX"})[["id", "ADX"]].copy())
+  ema = params.ema(ind.rename(columns={"EMA24_cl": "EMA"})[["id", "close", "EMA"]].copy())
+  df_m = ind.merge(macd, on='id').merge(rsi, on='id').merge(adx, on='id').merge(ema, on='id')
+  df_m.insert(loc=2, column='session', value=df_m["time"].apply(lambda x: indicators.w_session(x)))
+  df_m["oc_min"] = df_m["close"] / df_m["open"] - 1
+  df_m["DI_min"] = df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1
+  df_m["vEMA_min"] = df_m["volume"] / df_m["EMA9_vol"] - 1
+  df_m["op_min"] = df_m["open"] - df_m["EMA24_op"]
+  df_m["hi_min"] = df_m["high"] - df_m["EMA24_hi"]
+  df_m["low_min"] = df_m["low"] - df_m["EMA24_low"]
+  df_m["cl_min"] = df_m["close"] - df_m["EMA24_cl"]
+  df_m.drop(df_m.columns.values[3:19], axis=1, inplace=True)
+  df_m.drop(range(0, 933), inplace=True)
+  return df_m
 
 
 def calc_hour(candles):
@@ -97,13 +96,14 @@ if __name__ == '__main__':
   # draw_hist(df["high"], df["low"], (-0.1, 0.8))
 
   df_m = calc_min(candles)
-  # df_h = calc_hour(candles)
+  df_h = calc_hour(candles)
 
-  # df = helpers.merge_2m_1h(df_m.copy(), df_h.copy())
-  # df.drop(columns=["time_y"], inplace=True)
-  # df.dropna(inplace=True)
-  # df.rename(columns={"time_x": "time"}, inplace=True)
-  # df.to_sql(name='params', con=engine)
+  df = pd.merge(df_m, df_h, on='id', how="outer")
+  df.fillna(method='ffill', inplace=True)
+  df.drop(columns=["time_y"], inplace=True)
+  df.dropna(inplace=True)
+  df.rename(columns={"time_x": "time"}, inplace=True)
+  df.to_sql(name='params', con=engine, if_exists='replace')
 
   # Sandbox
   # df = ind.merge(adx, on='id')
