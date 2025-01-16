@@ -24,10 +24,8 @@ if __name__ == '__main__':
 
   # print(tabulate(df_model.iloc[0:200], headers='keys', tablefmt='psql'))
 
-  # model = joblib.load("./ml_models/prod/main_model_2.pkl")
-  # val_model = joblib.load("./ml_models/prod/val_model_2.pkl")
-  model = joblib.load("./ml_models/main_model_3.pkl")
-  val_model = joblib.load("./ml_models/val_model_3.pkl")
+  model = joblib.load("./ml_models/main_model_1.pkl")
+  val_model = joblib.load("./ml_models/val_model_1.pkl")
   counter = 0
   for index, x in enumerate(X):
     df_model.loc[index, ["0", "target"]] = (
@@ -41,11 +39,10 @@ if __name__ == '__main__':
     # if counter == 20:
     #   break
 
-  profile_1 = simulate.strategy(df_model, accuracy=0.5, max_accuracy=1, stop_loss=0.0025, take_profit=0.004, target="target", limit=6)  # TOP -0.29%
-  profile_2 = simulate.strategy(df_model, accuracy=0.5, max_accuracy=1, stop_loss=0.0025, take_profit=0.004, target="val_target", limit=6)  # TOP
-  # __ PROD MODELS __
-  # profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.8, stop_loss=0.0025, take_profit=0.004, target="target", limit=6)  # TOP
-  # profile_2 = simulate.strategy(df_model, accuracy=0.62, max_accuracy=0.75, stop_loss=0.0025, take_profit=0.004, target="val_target", limit=6)  # TOP
+  # profile = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.8, stop_loss=0.016, take_profit=0.004, target="val_target", limit=6)
+  # profile = simulate.strategy(df_model, accuracy=0.69, max_accuracy=0.8, stop_loss=0.016, take_profit=0.004, target="val_target", limit=6)  # TOP
+  profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.8, stop_loss=0.0025, take_profit=0.004, target="target", limit=6)  # TOP
+  profile_2 = simulate.strategy(df_model, accuracy=0.62, max_accuracy=0.75, stop_loss=0.0025, take_profit=0.004, target="val_target", limit=6)  # TOP
 
   fig = make_subplots(
       rows=2, cols=1,

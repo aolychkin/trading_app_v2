@@ -17,7 +17,7 @@ import internal.services.analytics.helpers as helpers
 
 def condition(x):
   # TODO: <= 0,
-  if 0.16 <= x:  # 0.3
+  if 0.16 <= x:
     return 1  # 57928
   elif x < 0.16:
     return 0  # 52820
@@ -25,9 +25,9 @@ def condition(x):
 
 def condition_validation(x):
   # TODO: <= 0,
-  if 0.3 <= x:
+  if 0.16 <= x:
     return 1  # 57928
-  elif x < 0.3:
+  elif x < 0.16:
     return 0  # 52820
 
 

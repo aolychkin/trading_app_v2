@@ -45,7 +45,7 @@ def get_static_data(period='week'):
     data = data.reset_index(drop=True)
   else:
     df = pd.read_sql_query(
-        "SELECT * from candles where time >= '2024-12-17 07:02:00.000' and time <= '2024-12-17 15:40:00.00'", cnx_shares)
+        "SELECT * from candles where time >= '2024-12-18 07:02:00.000' and time <= '2024-12-18 15:40:00.00'", cnx_shares)
     data = pd.read_sql_query(
         "SELECT * from normal where candle_id >= (?) and candle_id <= (?)", cnx_params, params=(str(df["id"].min()), str(df["id"].max())))
 

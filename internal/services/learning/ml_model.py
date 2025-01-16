@@ -9,11 +9,9 @@ from sklearn.model_selection import GridSearchCV, cross_val_score
 
 from lightgbm import LGBMClassifier
 from xgboost.sklearn import XGBClassifier
-from warnings import simplefilter
 
 
 def create_model_SVC(type: str, X_train, y_train):  # Создание модели SVM
-  simplefilter("ignore", category=FutureWarning)
   if type == "fast":
     # Если нужно расчитать параллельно
     model = OneVsRestClassifier(BaggingClassifier(SVC(kernel='rbf', C=1000.0, gamma="scale", cache_size=500, class_weight="balanced", random_state=17, verbose=1), max_samples=0.5, n_estimators=10, random_state=17))
@@ -21,8 +19,8 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
     return model
   elif type == "xgbc":
     model = XGBClassifier(
-        random_state=17, booster='gbtree', device='gpu', validate_parameters=False,
-        eta=0.1, gamma=0.3, max_depth=100, min_child_weight=1,
+        random_state=17, booster='gbtree', device='cuda', validate_parameters=False,
+        eta=0.3, gamma=0.2, max_depth=100, min_child_weight=2,
         max_delta_step=0, subsample=1,
         sampling_method='uniform', tree_method='hist',
         colsample_bytree=1, colsample_bylevel=1, colsample_bynode=1,
@@ -39,9 +37,9 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
     return model
   elif type == "lgbm":
     model = LGBMClassifier(
-        boosting_type='gbdt', num_leaves=280, num_threads=-1, device_type='cpu', random_state=17, verbose=-1,
-        max_depth=-1, learning_rate=0.4, class_weight='balanced',
-        colsample_bytree=1, lambda_l1=0.1, lambda_l2=0.2,  num_iterations=100)
+        boosting_type='gbdt', num_leaves=280, max_depth=-1, learning_rate=0.4, class_weight='balanced',
+        min_child_samples=20, colsample_bytree=1, reg_alpha=0.5, min_data_in_leaf=100, num_iterations=100,
+        random_state=17, verbose=0, n_jobs=-1)
     model.fit(X_train, y_train)  # Обучение модели
     return model
     model = LGBMClassifier(random_state=17)
@@ -52,7 +50,7 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
         'learning_rate': [0.1, 0.3, 0.5],
         'class_weight': ['balanced'],
         'min_child_samples': [10, 20, 50],
-        'lambda_l1': [0.1, 0.3, 0.5],
+        'reg_alpha': [0.1, 0.3, 0.5],
         'min_data_in_leaf': [30, 50, 100, 300],
         'colsample_bytree': [1],
     }

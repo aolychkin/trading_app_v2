@@ -26,12 +26,9 @@ from lightgbm import LGBMClassifier
 from xgboost.sklearn import XGBClassifier
 
 from sklearn.metrics import accuracy_score as acc
-from warnings import simplefilter
 
 if __name__ == '__main__':
-  simplefilter("ignore", category=RuntimeWarning)
-
-  df_predict = predict.make_prediction(is_validation=False)
+  df_predict = predict.make_prediction()
   df_normal_data = prep.make_normal_data()
   df_normal_data = prep.get_normal_data()
 
@@ -43,7 +40,7 @@ if __name__ == '__main__':
   X = df_X.to_numpy()
   y = df_y.to_numpy()
 
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=17)
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=17)
 
   model = mlm.create_model_SVC("lgbm", X_train, y_train.ravel())
 
@@ -53,4 +50,4 @@ if __name__ == '__main__':
   # Сохранение модели
   # main: lgbm = 0.8446
   # validation: xgbc=0.8485
-  joblib.dump(model, "./ml_models/val_model_3.pkl")
+  joblib.dump(model, "./ml_models/main_model_1.pkl")

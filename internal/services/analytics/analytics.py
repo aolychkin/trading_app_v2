@@ -1,7 +1,6 @@
 from datetime import datetime
 from tabulate import tabulate
 from tqdm import tqdm
-import time
 
 import sqlite3
 import pandas as pd
@@ -46,49 +45,45 @@ def test_pacf(ts):  # Принимает 1 параметр Графика + tim
   plt.show()
 
 
-def calc_minute(candles):
-  # Расчет параметров для минутных свечей
+def calc_min(candles):
   ind = indicators.ta_ind_minute(candles.copy())
-  start_time = time.time()
-  macd = params.macd(ind.rename(columns={"MACD10_signal": "MACD_signal", "MACD12_24": "MACD"})[["id", "MACD_signal", "MACD", "MACD_hist", 'time']].copy())
-  rsi = params.rsi(ind.rename(columns={"StochRSI9": "RSI", "StochRSI9_k": "RSI_K", "StochRSI9_d": "RSI_D"})[["id", "RSI", "RSI_K", "RSI_D"]].copy())
-  adx = params.adx(ind.rename(columns={"ADX9": "ADX"})[["id", "ADX"]].copy())
-  ema = params.ema(ind.rename(columns={"EMA24_cl": "EMA"})[["id", "close", "EMA"]].copy())
-  df_m = ind.merge(macd, on='id').merge(rsi, on='id').merge(adx, on='id').merge(ema, on='id')
-  df_m.insert(loc=2, column='session', value=df_m["time"].apply(lambda x: indicators.w_session(x)))
-  df_m["oc_min"] = df_m["close"] / df_m["open"] - 1
-  df_m["DI_min"] = df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1
-  df_m["op_min"] = df_m["open"] / df_m["EMA24_op"] - 1
-  df_m["hi_min"] = df_m["high"] / df_m["EMA24_hi"]-1
-  df_m["low_min"] = df_m["low"] / df_m["EMA24_low"]-1
-  df_m["cl_min"] = df_m["close"] / df_m["EMA24_cl"]-1
-  df_m.drop(df_m.columns.values[3:23], axis=1, inplace=True)
-  df_m.drop(range(0, 932), inplace=True)
-
-  # print(tabulate(df_m.iloc[30:50], headers='keys', tablefmt='psql'))
-  print("--- %s seconds ---" % (time.time() - start_time))
-
-  return df_m
+  macd = params.macd(ind.rename(columns={"MACD10_signal": "MACD_signal", "MACD12_24": "MACD"})[["id", "MACD_signal", "MACD"]].copy())
+  print(tabulate(macd.iloc[40:100], headers='keys', tablefmt='psql'))  # 933
+  # rsi = params.rsi(ind.rename(columns={"RSI9": "RSI"})[["id", "RSI"]].copy())
+  # adx = params.adx(ind.rename(columns={"ADX9": "ADX"})[["id", "ADX"]].copy())
+  # ema = params.ema(ind.rename(columns={"EMA24_cl": "EMA"})[["id", "close", "EMA"]].copy())
+  # df_m = ind.merge(macd, on='id').merge(rsi, on='id').merge(adx, on='id').merge(ema, on='id')
+  # df_m.insert(loc=2, column='session', value=df_m["time"].apply(lambda x: indicators.w_session(x)))
+  # df_m["oc_min"] = df_m["close"] / df_m["open"] - 1
+  # df_m["DI_min"] = df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1
+  # df_m["vEMA_min"] = df_m["volume"] / df_m["EMA9_vol"] - 1
+  # df_m["op_min"] = df_m["open"] - df_m["EMA24_op"]
+  # df_m["hi_min"] = df_m["high"] - df_m["EMA24_hi"]
+  # df_m["low_min"] = df_m["low"] - df_m["EMA24_low"]
+  # df_m["cl_min"] = df_m["close"] - df_m["EMA24_cl"]
+  # df_m.drop(df_m.columns.values[3:19], axis=1, inplace=True)
+  # df_m.drop(range(0, 933), inplace=True)
+  # return df_m
 
 
 def calc_hour(candles):
-  # Расчет параметров для часовых свечей
   candles_1h = resample_candles(candles, 60)  # убрать всякие опен клоузы и тд, смержить по id
   candles_1h.insert(loc=1, column='time', value=candles_1h.index)
   candles_1h = candles_1h.set_index(pd.RangeIndex(0, len(candles_1h.index)))
   ind = indicators.ta_ind_hour(candles_1h.copy())
-  macd = params.macd(ind.rename(columns={"MACD9_signal": "MACD_signal", "MACD12_26": "MACD"})[["id", "MACD_signal", "MACD", "MACD_hist", "time"]].copy(), type="hour")
-  rsi = params.rsi(ind.rename(columns={"StochRSI14": "RSI", "StochRSI14_k": "RSI_K", "StochRSI14_d": "RSI_D"})[["id", "RSI", "RSI_K", "RSI_D"]].copy(), type="hour")
+  macd = params.macd(ind.rename(columns={"MACD9_signal": "MACD_signal", "MACD12_26": "MACD"})[["id", "MACD_signal", "MACD"]].copy(), type="hour")
+  rsi = params.rsi(ind.rename(columns={"RSI14": "RSI"})[["id", "RSI"]].copy(), type="hour")
   adx = params.adx(ind.rename(columns={"ADX14": "ADX"})[["id", "ADX"]].copy(), type="hour")
   ema = params.ema(ind.rename(columns={"EMA20_cl": "EMA"})[["id", "close", "EMA"]].copy(), type="hour")
   df_h = ind.merge(macd, on='id').merge(rsi, on='id').merge(adx, on='id').merge(ema, on='id')
   df_h["oc_hour"] = df_h["close"] / df_h["open"] - 1
   df_h["DI_hour"] = df_h["ADX14_pos"] / df_h["ADX14_neg"] - 1
-  df_h["op_hour"] = df_h["open"] / df_h["EMA20_op"] - 1
-  df_h["hi_hour"] = df_h["high"] / df_h["EMA20_hi"] - 1
-  df_h["low_hour"] = df_h["low"] / df_h["EMA20_low"] - 1
-  df_h["cl_hour"] = df_h["close"] / df_h["EMA20_cl"] - 1
-  df_h.drop(df_h.columns.values[3:23], axis=1, inplace=True)
+  df_h["vEMA_hour"] = df_h["volume"] / df_h["EMA9_vol"] - 1
+  df_h["op_hour"] = df_h["open"] - df_h["EMA20_op"]
+  df_h["hi_hour"] = df_h["high"] - df_h["EMA20_hi"]
+  df_h["low_hour"] = df_h["low"] - df_h["EMA20_low"]
+  df_h["cl_hour"] = df_h["close"] - df_h["EMA20_cl"]
+  df_h.drop(df_h.columns.values[2:18], axis=1, inplace=True)
   df_h.drop(range(0, 33), inplace=True)
 
   return df_h
@@ -96,31 +91,29 @@ def calc_hour(candles):
 
 if __name__ == '__main__':
   cnx = sqlite3.connect('./storage/sqlite/shares.db')
+  engine = create_engine('sqlite:///storage/sqlite/params.db')
   candles = pd.read_sql_query(
       "SELECT id, time, open, high, low, close, volume FROM candles", cnx)
-
-  df_m = calc_minute(candles)
-  df_h = calc_hour(candles)
-
-  df = pd.merge(df_m, df_h, on='id', how="outer")
-  df.fillna(method='ffill', inplace=True)
-  # print(tabulate(df.iloc[0:50], headers='keys', tablefmt='psql'))
-  df.drop(columns=["time_y"], inplace=True)
-  df.dropna(inplace=True)
-  df.rename(columns={"time_x": "time"}, inplace=True)
-
-  engine = create_engine('sqlite:///storage/sqlite/params.db')
-  df.to_sql(name='params', con=engine, if_exists='replace')
-
-  # # sandbox
   # draw_hist(df["high"], df["low"], (-0.1, 0.8))
 
+  df_m = calc_min(candles)
+  # df_h = calc_hour(candles)
+
+  # df = helpers.merge_2m_1h(df_m.copy(), df_h.copy())
+  # df.drop(columns=["time_y"], inplace=True)
+  # df.dropna(inplace=True)
+  # df.rename(columns={"time_x": "time"}, inplace=True)
+  # df.to_sql(name='params', con=engine)
+
+  # Sandbox
   # df = ind.merge(adx, on='id')
   # df.drop(columns=["time"], inplace=True)  # Временно, потом восстановить
 
   # df["prediction"] = df["high"].rolling(
   #     window=20, closed='right').max().shift(-20).fillna(0)
   # df.drop(columns=["time"], inplace=True)  # Временно, потом восстановить
+
+  # Расчет параметров для часовых свечей
 
   # ind_1h = indicators.ta_ind_hour(candles_1h.copy())
   # df = pd.merge(ind, ind_1h, on='id', how="outer")
