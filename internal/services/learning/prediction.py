@@ -17,9 +17,9 @@ import internal.services.analytics.helpers as helpers
 
 def condition(x):
   # TODO: <= 0,
-  if 0.16 <= x:
+  if 0.2 <= x:
     return 1  # 57928
-  elif x < 0.16:
+  elif x < 0.2:
     return 0  # 52820
 
 

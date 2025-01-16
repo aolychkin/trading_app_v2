@@ -55,8 +55,8 @@ if __name__ == '__main__':
 
   # profile_1 = simulate.strategy(df_model, accuracy=0.5, max_accuracy=1, stop_loss=0.0016, take_profit=0.0016, target="target", limit=6)  # TOP
   # profile_2 = simulate.strategy(df_model, accuracy=0.5, max_accuracy=1, stop_loss=0.0016, take_profit=0.0016, target="val_target", limit=6)  # TOP
-  profile_1 = simulate.strategy(df_model, accuracy=0.95, max_accuracy=1, stop_loss=0.0016, take_profit=0.0016, target="target", limit=6)  # TOP
-  profile_2 = simulate.strategy(df_model, accuracy=0.95, max_accuracy=1, stop_loss=0.0016, take_profit=0.003, target="val_target", limit=6)  # TOP
+  profile_1 = simulate.strategy(df_model, accuracy=0.95, max_accuracy=1, stop_loss=0.002, take_profit=0.002, target="target", limit=6)  # TOP
+  profile_2 = simulate.strategy(df_model, accuracy=0.95, max_accuracy=1, stop_loss=0.002, take_profit=0.002, target="val_target", limit=6)  # TOP
   # profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.80, stop_loss=0.0025, take_profit=0.0035, target="target", limit=6)  # TOP
   # profile_2 = simulate.strategy(df_model, accuracy=0.62, max_accuracy=0.75, stop_loss=0.0025, take_profit=0.0035, target="val_target", limit=6)  # TOP
   # profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.80, stop_loss=0.0025, take_profit=0.0035, target="target", limit=6)  # TOP
