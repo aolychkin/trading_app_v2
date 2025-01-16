@@ -39,14 +39,12 @@ if __name__ == '__main__':
     # if counter == 20:
     #   break
 
-  # profile = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.8, stop_loss=0.016, take_profit=0.004, target="val_target", limit=6)
-  # profile = simulate.strategy(df_model, accuracy=0.69, max_accuracy=0.8, stop_loss=0.016, take_profit=0.004, target="val_target", limit=6)  # TOP
-  profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.8, stop_loss=0.0025, take_profit=0.004, target="target", limit=6)  # TOP
-  profile_2 = simulate.strategy(df_model, accuracy=0.62, max_accuracy=0.75, stop_loss=0.0025, take_profit=0.004, target="val_target", limit=6)  # TOP
+  profile_1 = simulate.strategy(df_model, accuracy=0.61, max_accuracy=0.80, stop_loss=0.0025, take_profit=0.0035, target="target", limit=6)  # TOP
+  profile_2 = simulate.strategy(df_model, accuracy=0.62, max_accuracy=0.75, stop_loss=0.0025, take_profit=0.0035, target="val_target", limit=6)  # TOP
 
   fig = make_subplots(
       rows=2, cols=1,
-      subplot_titles=("Ttitle 1", "Title 2"))
+      subplot_titles=("profile_1", "profile_2"))
 
   fig = draw.draw_candles(fig, df_model, profile_1, 1)
   fig = draw.draw_candles(fig, df_model, profile_2, 2)

@@ -39,7 +39,7 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
     model = LGBMClassifier(
         boosting_type='gbdt', num_leaves=280, max_depth=-1, learning_rate=0.4, class_weight='balanced',
         min_child_samples=20, colsample_bytree=1, reg_alpha=0.5, min_data_in_leaf=100, num_iterations=100,
-        random_state=17, verbose=0, n_jobs=-1)
+        random_state=17, verbose=-1, n_jobs=-1)
     model.fit(X_train, y_train)  # Обучение модели
     return model
     model = LGBMClassifier(random_state=17)
