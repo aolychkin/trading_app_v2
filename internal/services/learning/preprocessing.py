@@ -24,12 +24,12 @@ def make_normal_data():
   df_param.drop(columns=["index", "time", "session"], inplace=True)
 
   cols = df_param.columns.values[1:]
-  # Q1 = df_param[cols].quantile(0.05)
-  # Q3 = df_param[cols].quantile(0.95)
-  # IQR = Q3 - Q1
-  # df_param = df_param[~((df_param[cols] < (Q1 - 1.5 * IQR)) | (df_param[cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
+  Q1 = df_param[cols].quantile(0.05)
+  Q3 = df_param[cols].quantile(0.95)
+  IQR = Q3 - Q1
+  df_param = df_param[~((df_param[cols] < (Q1 - 1.5 * IQR)) | (df_param[cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
 
-  scaler = MaxAbsScaler()
+  scaler = MaxAbsScaler()  # MaxAbsScaler()
   x_scaled = scaler.fit_transform(df_param[cols].to_numpy())
   df_normal = pd.DataFrame(data=x_scaled.reshape(df_param["op_min"].count(), -1), columns=df_param[cols].columns)  # train_y.values.ravel()
   df_normal.insert(loc=0, column='candle_id', value=df_param[df_param.columns.values[0:1]].values)
@@ -37,6 +37,17 @@ def make_normal_data():
   df_normal.to_sql(name='normal', con=engine, if_exists='replace')
 
   print(tabulate(df_normal.iloc[20:25], headers='keys', tablefmt='psql'))
+
+
+def calc_normal_data(df_param):
+  df_param.drop(columns=["time", "session"], inplace=True)
+  cols = df_param.columns.values[1:]
+  scaler = MaxAbsScaler()
+  x_scaled = scaler.fit_transform(df_param[cols].to_numpy())
+  df_normal = pd.DataFrame(data=x_scaled.reshape(df_param["op_min"].count(), -1), columns=df_param[cols].columns)  # train_y.values.ravel()
+  df_normal.insert(loc=0, column='candle_id', value=df_param[df_param.columns.values[0:1]].values)
+
+  return df_normal
 
 
 def get_normal_data():

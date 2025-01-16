@@ -88,22 +88,30 @@ def calc_hour(candles):
   return df_h
 
 
+def get_candle_analytics(candles, in_base=False):
+  df_m = calc_min(candles)
+  df_h = calc_hour(candles)
+
+  df = pd.merge(df_m, df_h, on='id', how="outer")
+  # print(tabulate(df.loc[0:100], headers='keys', tablefmt='psql'))
+
+  df.fillna(method='ffill', inplace=True)
+  df.drop(columns=["time_y"], inplace=True)
+  df.dropna(inplace=True)
+  df.rename(columns={"time_x": "time"}, inplace=True)
+  if in_base:
+    df.to_sql(name='params', con=engine, if_exists='replace')
+
+  return df
+
+
 if __name__ == '__main__':
   cnx = sqlite3.connect('./storage/sqlite/shares.db')
   engine = create_engine('sqlite:///storage/sqlite/params.db')
   candles = pd.read_sql_query(
       "SELECT id, time, open, high, low, close, volume FROM candles", cnx)
   # draw_hist(df["high"], df["low"], (-0.1, 0.8))
-
-  df_m = calc_min(candles)
-  df_h = calc_hour(candles)
-
-  df = pd.merge(df_m, df_h, on='id', how="outer")
-  df.fillna(method='ffill', inplace=True)
-  df.drop(columns=["time_y"], inplace=True)
-  df.dropna(inplace=True)
-  df.rename(columns={"time_x": "time"}, inplace=True)
-  df.to_sql(name='params', con=engine, if_exists='replace')
+  get_candle_analytics(candles, in_base=True)
 
   # Sandbox
   # df = ind.merge(adx, on='id')

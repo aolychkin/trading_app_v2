@@ -46,6 +46,8 @@ def strategy(
   for index, row in tqdm(data.iterrows()):
     # Сигнал на покупку акции
     if (accuracy <= row[target] <= max_accuracy) and (profile[profile["is_closed"] == 0]["is_closed"].count() < limit):
+      if datetime.strptime(row["time"], '%Y-%m-%d %H:%M:%S.%f').strftime("%H:%M") >= datetime(2024, 12, 1, 15, 38).strftime("%H:%M"):
+        continue
       if is_val:
         if (val_accuracy <= row[val_target] <= val_max_accuracy):
           transaction_id += 1
@@ -55,7 +57,7 @@ def strategy(
           profile.loc[indx, "id"] = transaction_id
           profile.loc[indx, "transaction"] = -round(price * (1+0.0004), 2)
           profile.loc[indx, "balance"] = round(balance-round(price * (1+0.0004), 2), 2)
-          profile.loc[indx, "candle_id"] = row["id"]  # data.loc[index+1, "id"]
+          profile.loc[indx, "candle_id"] = row["candle_id"]  # data.loc[index+1, "id"]
           profile.loc[indx, "price"] = price
           profile.loc[indx, "is_closed"] = 0
           profile.loc[indx, "accuracy"] = row[target]
@@ -68,7 +70,7 @@ def strategy(
         profile.loc[indx, "id"] = transaction_id
         profile.loc[indx, "transaction"] = -round(price * (1+0.0004), 2)
         profile.loc[indx, "balance"] = round(balance-round(price * (1+0.0004), 2), 2)
-        profile.loc[indx, "candle_id"] = row["id"]  # data.loc[index+1, "id"]
+        profile.loc[indx, "candle_id"] = row["candle_id"]  # data.loc[index+1, "id"]
         profile.loc[indx, "price"] = price
         profile.loc[indx, "is_closed"] = 0
         profile.loc[indx, "accuracy"] = row[target]
@@ -76,12 +78,12 @@ def strategy(
 
     for index, p_row in profile.iterrows():
       if (p_row["is_closed"] == 0):
-        if (0 <= row["id"] - p_row["candle_id"] <= wait + 1) and (row["high"]/p_row["price"] - 1 >= take_profit):
+        if (0 <= row["candle_id"] - p_row["candle_id"] <= wait + 1) and (row["high"]/p_row["price"] - 1 >= take_profit):
           indx += 1
           profile.loc[indx, "id"] = p_row["id"]
           profile.loc[indx, "transaction"] = round(p_row['price'] * (1-0.0004-stop_loss), 2)
           profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+round(p_row['price'] * (1-0.0004+take_profit), 2), 2)
-          profile.loc[indx, "candle_id"] = row["id"]
+          profile.loc[indx, "candle_id"] = row["candle_id"]
           profile.loc[indx, "price"] = round(p_row['price'] * (1+take_profit), 2)
           profile.loc[indx, "is_closed"] = 1
           profile.loc[index, "is_closed"] = 1
@@ -90,12 +92,12 @@ def strategy(
           profile.loc[index, "result"] = "/"
           profile.loc[indx, "result"] = "+"
           profile.loc[indx, "time"] = row["time"]
-        elif (0 < row["id"] - p_row["candle_id"] <= wait + 1) and (row["low"]/p_row["price"] - 1 <= -stop_loss):
+        elif (0 < row["candle_id"] - p_row["candle_id"] <= wait + 1) and (row["low"]/p_row["price"] - 1 <= -stop_loss):
           indx += 1
           profile.loc[indx, "id"] = p_row["id"]
           profile.loc[indx, "transaction"] = round(p_row['price'] * (1-0.0004-stop_loss), 2)
           profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+round(p_row['price'] * (1-0.0004-stop_loss), 2), 2)
-          profile.loc[indx, "candle_id"] = row["id"]
+          profile.loc[indx, "candle_id"] = row["candle_id"]
           profile.loc[indx, "price"] = round(p_row['price'] * (1-stop_loss), 2)
           profile.loc[indx, "is_closed"] = 1
           profile.loc[index, "is_closed"] = 1
@@ -104,13 +106,13 @@ def strategy(
           profile.loc[index, "result"] = "/"
           profile.loc[indx, "result"] = "-"
           profile.loc[indx, "time"] = row["time"]
-        elif (row["id"] - p_row["candle_id"] > wait+1) or (datetime.strptime(row["time"], '%Y-%m-%d %H:%M:%S.%f').strftime("%H:%M") == datetime(2024, 12, 1, 15, 38).strftime("%H:%M")):
+        elif (row["candle_id"] - p_row["candle_id"] > wait+1) or (datetime.strptime(row["time"], '%Y-%m-%d %H:%M:%S.%f').strftime("%H:%M") == datetime(2024, 12, 1, 15, 38).strftime("%H:%M")):
           indx += 1
           # sell = round(row['close'] * (1-0.0004), 2)
           profile.loc[indx, "id"] = p_row["id"]
           profile.loc[indx, "transaction"] = round(row['close'] * (1-0.0004), 2)
           profile.loc[indx, "balance"] = round(profile.loc[indx-1, "balance"]+round(row['close'] * (1-0.0004), 2), 2)
-          profile.loc[indx, "candle_id"] = row["id"]
+          profile.loc[indx, "candle_id"] = row["candle_id"]
           profile.loc[indx, "price"] = row['close']
           profile.loc[indx, "is_closed"] = 1
           profile.loc[index, "is_closed"] = 1

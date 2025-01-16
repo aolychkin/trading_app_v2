@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
   X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=17)
 
-  model = mlm.create_model_SVC("lgbm", X_train, y_train.ravel())
+  model = mlm.create_model_SVC("xgbc", X_train, y_train.ravel())
 
   # Оценка производительности модели
   mlm.model_score(model, X_test, y_test)
@@ -50,4 +50,4 @@ if __name__ == '__main__':
   # Сохранение модели
   # main: lgbm = 0.8446
   # validation: xgbc=0.8485
-  joblib.dump(model, "./ml_models/main_model_2.pkl")
+  joblib.dump(model, "./ml_models/val_model_2.pkl")
