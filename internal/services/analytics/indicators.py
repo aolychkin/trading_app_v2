@@ -10,7 +10,11 @@ from ta.momentum import RSIIndicator
 
 
 def w_session(day):
-  day = datetime.strptime(day, '%Y-%m-%d %H:%M:%S.%f')
+  try:
+    day = datetime.strptime(day, '%Y-%m-%d %H:%M:%S.%f')
+  except:
+    new_day = day[:19]
+    day = datetime.strptime(new_day, '%Y-%m-%d %H:%M:%S')
   candle_time = day.strftime("%H:%M")
   # Утренняя торговая сессия: 04:00 – 7:00 utc.
   s_morning = datetime(2024, 12, 2, 4, 00).strftime("%H:%M")
@@ -18,7 +22,7 @@ def w_session(day):
 
   # Основная торговая сессия: 7:00 – 16:00 utc.
   s_main = datetime(2024, 12, 2, 7, 00).strftime("%H:%M")
-  f_main = datetime(2024, 12, 2, 15, 30).strftime("%H:%M")
+  f_main = datetime(2024, 12, 2, 15, 40).strftime("%H:%M")
   # TODO: понять, что делать с последними 10 минутами графика, которые я могу предсказать, но не могу использовать
   # В 15:40 начинается снятие заявок
 

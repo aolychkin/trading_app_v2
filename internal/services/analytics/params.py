@@ -50,10 +50,23 @@ def cross(s_down, f_down, s_up, f_up):  # down должен пересекать
 
 def power_condition(row):
   if row['cross_type'] == 0:
-    if (row["hist"] > 0):
+    if (row["hist"] > 0):  # Показатель может быть отрицательным сам по себе!
       return 1 - row["base_power"]
     elif (row["hist"] < 0):
       return -1 + row["base_power"]
+  else:
+    if row['cross_type'] == 1:
+      return 1 + row["base_power"]
+    else:
+      return -1 - row["base_power"]
+
+
+def power_condition_dis_balanced(row):
+  if row['cross_type'] == 0:
+    if (row["hist"] > 0):
+      return 1 - row["base_power"] / 3
+    elif (row["hist"] < 0):
+      return -1 + row["base_power"] / 3
   else:
     if row['cross_type'] == 1:
       return 1 + row["base_power"]
