@@ -112,7 +112,7 @@ def strategy(
           profile.loc[index, "result"] = "/"
           profile.loc[indx, "result"] = "-"
           profile.loc[indx, "time"] = row["time"]
-        elif (row["candle_id"] - p_row["candle_id"] > wait+1) or (t_time >= datetime(2024, 12, 1, 15, 38).strftime("%H:%M")):
+        elif (row["candle_id"] - p_row["candle_id"] > wait+1) or (t_time >= datetime(2024, 12, 1, 15, 30).strftime("%H:%M")):
           indx += 1
           # sell = round(row['close'] * (1-0.0004), 2)
           profile.loc[indx, "id"] = p_row["id"]

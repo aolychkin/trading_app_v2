@@ -22,7 +22,7 @@ def load_day_candle(m, d):
   data_candle = []
 
   with Client(TOKEN, target=INVEST_GRPC_API_SANDBOX) as client:
-    for day in tqdm(range(d-2, d+1)):
+    for day in tqdm(range(d-3, d+1)):
       for candle in client.market_data.get_candles(
               figi=FIGI,
               from_=datetime(2025, m, day, 6, 0),
@@ -60,11 +60,11 @@ def load_day_candle(m, d):
   df.insert(loc=0, column='id', value=df.index)
   df_candle = pd.DataFrame(data_candle)
   df_candle.columns = ["time",  "open", "high", "low", "close",  "volume"]
-  df_candle.insert(loc=0, column='id', value=df_candle.index+df.loc[df['time'] == "2025-01-16 07:02:00+00:00"].index.values[0])
+  df_candle.insert(loc=0, column='id', value=df_candle.index+df.loc[df['time'] == f"2025-01-{d} 07:02:00+00:00"].index.values[0])
   # print(tabulate(df.loc[1050:1070], headers='keys', tablefmt='psql'))
   # print(tabulate(df_candle.loc[:20], headers='keys', tablefmt='psql'))
 
-  return df, df.loc[df['time'] == "2025-01-16 07:02:00+00:00"].index.values[0], df.loc[df['time'] == "2025-01-16 15:30:00+00:00"].index.values[0]
+  return df, df.loc[df['time'] == f"2025-01-{d} 07:02:00+00:00"].index.values[0], df.loc[df['time'] == f"2025-01-{d} 15:30:00+00:00"].index.values[0]
 
 
 def load_candles(years, engine):

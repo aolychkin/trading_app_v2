@@ -50,4 +50,4 @@ if __name__ == '__main__':
   # Сохранение модели
   # main: lgbm = 0.8446
   # validation: xgbc=0.8485
-  joblib.dump(model, "./ml_models/main_model_4.pkl")
+  joblib.dump(model, "./ml_models/v115/main_model_1.pkl")

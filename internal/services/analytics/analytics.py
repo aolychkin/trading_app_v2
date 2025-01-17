@@ -95,7 +95,7 @@ def get_candle_analytics(candles, in_base=False):
   df = pd.merge(df_m, df_h, on='id', how="outer")
   # print(tabulate(df.loc[0:100], headers='keys', tablefmt='psql'))
 
-  df.fillna(method='ffill', inplace=True)
+  df.ffill(inplace=True)
   df.drop(columns=["time_y"], inplace=True)
   df.dropna(inplace=True)
   df.rename(columns={"time_x": "time"}, inplace=True)
