@@ -27,7 +27,8 @@ from xgboost.sklearn import XGBClassifier
 
 from sklearn.metrics import accuracy_score as acc
 
-if __name__ == '__main__':
+
+def start_learning():
   df_predict = predict.make_prediction()
   df_normal_data = prep.make_normal_data()
   df_normal_data = prep.get_normal_data()
@@ -51,3 +52,7 @@ if __name__ == '__main__':
   # main: lgbm = 0.8446
   # validation: xgbc=0.8485
   joblib.dump(model, "./ml_models/v115/main_model_1.pkl")
+
+
+if __name__ == '__main__':
+  start_learning()

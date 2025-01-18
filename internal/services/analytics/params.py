@@ -102,22 +102,22 @@ def macd(df, type="min"):  # Нельзя гистограмму использ�
   return (df[["id", f"MACD_{type}"]].copy())
 
 
-def rsi(df, type="min"):
+def rsi(df, type="min", ass=70):
   df.insert(loc=1, column='RSI_pred', value=df["RSI"].shift(1))
-  df["cross_type"] = df.apply(lambda row: cross(row["RSI_pred"], row["RSI"], 70, 70), axis=1)
+  df["cross_type"] = df.apply(lambda row: cross(row["RSI_pred"], row["RSI"], ass, ass), axis=1)
   df["counter"] = 0
-  df["ASS"] = 70
-  df["hist"] = df["RSI"] - 70
+  df["ASS"] = ass
+  df["hist"] = df["RSI"] - ass
   df["hist_pred"] = df["hist"].shift(1)
   df["cross_type"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else 0, axis=1)
   df["tmp_power"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else np.nan, axis=1)
   df["tmp_power"] = df["tmp_power"].ffill()
-  df["base_power"] = df.apply(lambda row: np.abs(np.mean([row["RSI_pred"], row["RSI"]]) / 70 - 1), axis=1)
+  df["base_power"] = df.apply(lambda row: np.abs(np.mean([row["RSI_pred"], row["RSI"]]) / ass - 1), axis=1)
   df["power"] = df.apply(power_condition_dis_balanced, axis=1)
 
   print("RSI:", df["power"].min(), df["power"].max())
-  df.rename(columns={"power": f"RSI_{type}"}, inplace=True)
-  return (df[["id", f"RSI_{type}"]].copy())
+  df.rename(columns={"power": f"RSI_{type}_{str(ass)}"}, inplace=True)
+  return (df[["id", f"RSI_{type}_{str(ass)}"]].copy())
 
 
 def adx(df, type="min"):  # Растущий и высокий тренд (больше 25 и чем больше - тем лучше) = подтверждение продажи и покупки. "Для ADX все что не рост - все слабость тренда"
@@ -142,7 +142,8 @@ def ema(df, type="min"):
   df["tmp_power"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else np.nan, axis=1)
   df["tmp_power"] = df["tmp_power"].ffill()
   # df["base_power"] = df.apply(lambda row: np.abs(np.mean([row["close_pred"], row["close"]]) / np.mean([row["EMA_pred"], row["EMA"]])-1), axis=1)
-  df["base_power"] = np.abs(df["hist"])
+  df["base_power"] = df.apply(lambda row: np.abs(row["close"] / row["EMA"]-1), axis=1)
+  # df["base_power"] = np.abs(df["hist"])
   df["power"] = df.apply(power_condition_dis_balanced, axis=1)
 
   print("сEMA:", df["power"].min(), df["power"].max())
