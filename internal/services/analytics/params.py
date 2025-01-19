@@ -60,12 +60,24 @@ def converter(row):
   return converted_one - converted_two
 
 
+def converter_multiplication(row):
+  old_min, old_max = -1, 1
+  new_min, new_max = 10, 20
+
+  old_range = old_max - old_min
+  new_range = new_max - new_min
+
+  converted_one = ((row["MACD"] - old_min) * new_range / old_range) + new_min
+  converted_two = ((row["MACD_signal"] - old_min) * new_range / old_range) + new_min
+  return np.abs(converted_one / converted_two - 1)
+
+
 def power_condition(row):
   if row['cross_type'] == 0:  # Показатель может быть отрицательным сам по себе!
     if (row["tmp_power"] > 0):
-      return 1 - row["base_power"]
+      return 0 + row["base_power"] * 3
     elif (row["tmp_power"] < 0):
-      return -1 + row["base_power"]
+      return 0 - row["base_power"] / 3
   else:
     if row['cross_type'] == 1:
       return 1 + row["base_power"] * 2
@@ -76,9 +88,9 @@ def power_condition(row):
 def power_condition_dis_balanced(row):
   if row['cross_type'] == 0:
     if (row["tmp_power"] > 0):
-      return 1 - row["base_power"] / 3
+      return 0 + row["base_power"] / 3
     elif (row["tmp_power"] < 0):
-      return -1 + row["base_power"] / 3
+      return 0 - row["base_power"] / 3
   else:
     if row['cross_type'] == 1:
       return 1 + row["base_power"]
@@ -95,9 +107,13 @@ def macd(df, type="min"):  # Нельзя гистограмму использ�
   df["tmp_power"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else np.nan, axis=1)
   df["tmp_power"] = df["tmp_power"].ffill()
   df["base_power"] = np.abs(df["hist"])
+  # df["base_power"] = df.apply(converter_multiplication, axis=1)
   df["power"] = df.apply(power_condition, axis=1)
   # print(tabulate(df.loc[220:270], headers='keys', tablefmt='psql'))
   print("MACD:", df["power"].min(), df["power"].max())
+  print(df[df['base_power'] == df['base_power'].min()])
+  print(df[df['base_power'] == df['base_power'].max()])
+  print("MACD base_power:", df["base_power"].min(), df["base_power"].max())
   df.rename(columns={"power": f"MACD_{type}"}, inplace=True)
   return (df[["id", f"MACD_{type}"]].copy())
 

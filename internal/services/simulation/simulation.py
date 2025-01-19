@@ -22,7 +22,7 @@ import warnings
 
 def start_simulation():
   warnings.filterwarnings(action='ignore')
-  df_candles, df_cid, df_f_cid = data.load_day_candle(1, 15)
+  df_candles, df_cid, df_f_cid = data.load_day_candle(1, 16)
   df_param = anal.get_candle_analytics(df_candles.copy(), in_base=False)
   df_normal = prep.calc_normal_data(df_param)
   df_candles.rename(columns={"id": "candle_id"}, inplace=True)
@@ -41,8 +41,8 @@ def start_simulation():
     df_model.loc[df_model.index.min()+index, ["0", "target"]] = (
         model.predict_proba(x.reshape(1, -1))).ravel()
 
-  profile_1 = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.93, stop_loss=0.02, take_profit=0.002, target="target", limit=6)  # TOP
-  profile_2 = simulate.strategy(df_model, accuracy=0.65, max_accuracy=0.99, stop_loss=0.02, take_profit=0.002, target="target", limit=6)  # TOP
+  profile_1 = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.93, stop_loss=0.0016, take_profit=0.002, target="target", limit=6)  # TOP
+  profile_2 = simulate.strategy(df_model, accuracy=0.9, max_accuracy=0.99, stop_loss=0.002, take_profit=0.002, target="target", limit=6)  # TOP
 
   fig = make_subplots(
       rows=2, cols=1,

@@ -23,6 +23,16 @@ def condition(x):
     return 0  # 52820
 
 
+def condition_row(row):
+  # TODO: <= 0,
+  if 0.2 <= row["pred_high"] and row["pred_low"] >= -0.08:
+    return 1  # 57928
+  elif 0.2 > row["pred_high"] or row["pred_low"] < -0.08:
+    return 0  # 52820
+  else:
+    return -1
+
+
 def condition_validation(x):
   # TODO: <= 0,
   if 0.16 <= x:
@@ -44,13 +54,17 @@ def make_prediction(is_validation=False):
 
   df["max_high"] = df["high"].rolling(
       window=20, closed='right').max().shift(-20).fillna(0)
+  df["min_low"] = df["low"].rolling(
+      window=20, closed='right').min().shift(-20).fillna(0)
   # draw_hist(df["max_high"], df["close"], (-0.3, 1))
-  df["pred_high"] = (df["max_high"] / df["close"] - 1)*100
+  df["pred_high"] = (df["max_high"] / df["close"] - 1) * 100
+  df["pred_low"] = (df["min_low"] / df["close"] - 1) * 100
 
   if is_validation:
     df["class"] = df["pred_high"].apply(condition_validation)
   else:
-    df["class"] = df["pred_high"].apply(condition)
+    # df["class"] = df["pred_high"].apply(condition)
+    df["class"] = df.apply(condition_row, axis=1)
 
   print(df["class"].value_counts())
   df.rename(columns={"id": "candle_id"}, inplace=True)
