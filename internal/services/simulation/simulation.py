@@ -42,7 +42,7 @@ def start_simulation():
         model.predict_proba(x.reshape(1, -1))).ravel()
 
   profile_1 = simulate.strategy(df_model, accuracy=0.7, max_accuracy=0.93, stop_loss=0.0016, take_profit=0.002, target="target", limit=6)  # TOP
-  profile_2 = simulate.strategy(df_model, accuracy=0.9, max_accuracy=0.99, stop_loss=0.002, take_profit=0.002, target="target", limit=6)  # TOP
+  profile_2 = simulate.strategy(df_model, accuracy=0.8, max_accuracy=1, stop_loss=0.002, take_profit=0.002, target="target", limit=6)  # TOP
 
   fig = make_subplots(
       rows=2, cols=1,

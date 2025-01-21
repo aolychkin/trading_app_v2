@@ -7,6 +7,10 @@ from sklearn.multiclass import OneVsRestClassifier, OneVsOneClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import GridSearchCV, cross_val_score
 
+from skopt import BayesSearchCV
+from skopt.space import Integer, Real, Categorical
+import scipy.stats as stats
+
 from lightgbm import LGBMClassifier
 from xgboost.sklearn import XGBClassifier
 
@@ -36,6 +40,24 @@ def create_model_SVC(type: str, X_train, y_train):  # Создание моде�
     model.fit(X_train, y_train)  # Обучение модели
     return model
   elif type == "lgbm":
+    param_grid = {
+        'boosting_type': ['gbdt', 'dart', 'rf'],  # default = gbdt
+        'num_leaves': Integer(10, 200),  # default = 31
+        'max_depth': Integer(2, 12),  # default = -1
+        'learning_rate': Real(0.0001, 0.3),  # default = 0.1
+        'num_iterations': Integer(50, 1000),  # default = 100
+        'reg_alpha': Real(0.0001, 0.1),  # default = 0.0
+        'bagging_freq': Integer(1, 5),  # default = 0
+        'bagging_fraction': Real(0.1, 0.9)  # default = 1.0
+    }
+    model = LGBMClassifier(random_state=17, verbose=-1, n_jobs=-1, force_col_wise=True)
+    bayes_search = BayesSearchCV(model, param_grid, n_iter=1, cv=3)
+    bayes_search.fit(X_train, y_train)
+    print("Best Hyperparameters:", bayes_search.best_params_)
+    print("Best Cross-Validation Score:", bayes_search.best_score_)
+
+    return model
+
     # model = LGBMClassifier(
     #     boosting_type='gbdt', num_leaves=280, max_depth=-1, learning_rate=0.4, class_weight='balanced',
     #     min_child_samples=20, colsample_bytree=1, reg_alpha=0.5, min_data_in_leaf=100, num_iterations=100,

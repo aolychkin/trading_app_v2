@@ -56,9 +56,9 @@ def calc_min(candles):
   # df_m = ind.merge(macd, on='id').merge(rsi70, on='id').merge(rsi50, on='id').merge(rsi30, on='id').merge(adx, on='id').merge(ema, on='id')
   df_m = ind.merge(macd, on='id').merge(rsi70, on='id').merge(adx, on='id').merge(ema, on='id')
   df_m.insert(loc=2, column='session', value=df_m["time"].apply(lambda x: indicators.w_session(x)))
-  df_m["oc_min"] = df_m["close"] / df_m["open"] - 1
-  df_m["DI_min"] = df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1
-  # df_m["vEMA_min"] = df_m["volume"] / df_m["EMA9_vol"] - 1
+  df_m["oc_min"] = (df_m["close"] / df_m["open"] - 1)*10
+  df_m["DI_min"] = (df_m["ADX9_pos"] / df_m["ADX9_neg"] - 1)*10
+  df_m["vEMA_min"] = (df_m["volume"] / df_m["EMA9_vol"] - 1)*10
   df_m["op_min"] = df_m["open"] - df_m["EMA24_op"]
   df_m["hi_min"] = df_m["high"] - df_m["EMA24_hi"]
   df_m["low_min"] = df_m["low"] - df_m["EMA24_low"]
@@ -79,9 +79,9 @@ def calc_hour(candles):
   ema = params.ema(ind.rename(columns={"EMA20_cl": "EMA"})[["id", "close", "EMA"]].copy(), type="hour")
   df_h = ind.merge(macd, on='id').merge(rsi70, on='id').merge(adx, on='id').merge(ema, on='id')
   # df_h = ind.merge(macd, on='id').merge(rsi70, on='id').merge(rsi50, on='id').merge(adx, on='id').merge(ema, on='id')
-  df_h["oc_hour"] = df_h["close"] / df_h["open"] - 1
-  df_h["DI_hour"] = df_h["ADX14_pos"] / df_h["ADX14_neg"] - 1
-  # df_h["vEMA_hour"] = df_h["volume"] / df_h["EMA9_vol"] - 1
+  df_h["oc_hour"] = (df_h["close"] / df_h["open"] - 1)*10
+  df_h["DI_hour"] = (df_h["ADX14_pos"] / df_h["ADX14_neg"] - 1)*10
+  df_h["vEMA_hour"] = (df_h["volume"] / df_h["EMA9_vol"] - 1)*10
   df_h["op_hour"] = df_h["open"] - df_h["EMA20_op"]
   df_h["hi_hour"] = df_h["high"] - df_h["EMA20_hi"]
   df_h["low_hour"] = df_h["low"] - df_h["EMA20_low"]

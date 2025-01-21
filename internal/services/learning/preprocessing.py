@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler, MaxAbsScaler, RobustScaler
-from sklearn.preprocessing import QuantileTransformer
+from sklearn.preprocessing import QuantileTransformer, PowerTransformer, normalize
 
 import internal.services.learning.prediction as predict
 
@@ -29,8 +29,8 @@ def make_normal_data():
   df_param.drop(columns=["index", "time", "session"], inplace=True)
 
   cols = df_param.columns.values[1:]
-  # Q1 = df_param[cols].quantile(0.05)
-  # Q3 = df_param[cols].quantile(0.95)
+  # Q1 = df_param[cols].quantile(0.01)
+  # Q3 = df_param[cols].quantile(0.99)
   # IQR = Q3 - Q1
   # df_param = df_param[~((df_param[cols] < (Q1 - 1.5 * IQR)) | (df_param[cols] > (Q3 + 1.5 * IQR))).any(axis=1)]
 
@@ -40,7 +40,7 @@ def make_normal_data():
 
   # fig = go.Figure()
   bins = 50
-  fig.add_trace(go.Histogram(x=df_param["op_hour"], nbinsx=bins), row=1, col=1)
+  fig.add_trace(go.Histogram(x=df_param["MACD_min"], nbinsx=bins), row=1, col=1)
   fig.add_trace(go.Histogram(x=df_param["RSI_min_70"], nbinsx=bins), row=1, col=2)
   fig.add_trace(go.Histogram(x=df_param["ADX_min"], nbinsx=bins), row=1, col=3)
   fig.add_trace(go.Histogram(x=df_param["сEMA_min"], nbinsx=bins), row=1, col=4)
@@ -49,23 +49,19 @@ def make_normal_data():
   x_scaled = scaler.fit_transform(df_param[cols].to_numpy())
   df_normal = pd.DataFrame(data=x_scaled.reshape(df_param["ADX_min"].count(), -1), columns=df_param[cols].columns)  # train_y.values.ravel()
   df_normal.insert(loc=0, column='candle_id', value=df_param[df_param.columns.values[0:1]].values)
-  fig.add_trace(go.Histogram(x=df_normal["op_hour"], nbinsx=bins), row=2, col=1)
+  fig.add_trace(go.Histogram(x=df_normal["MACD_min"], nbinsx=bins), row=2, col=1)
   fig.add_trace(go.Histogram(x=df_normal["RSI_min_70"], nbinsx=bins), row=2, col=2)
   fig.add_trace(go.Histogram(x=df_normal["ADX_min"], nbinsx=bins), row=2, col=3)
   fig.add_trace(go.Histogram(x=df_normal["сEMA_min"], nbinsx=bins), row=2, col=4)
 
-  quantile_transformer = QuantileTransformer(output_distribution='normal')
-  x_scaled = quantile_transformer.fit_transform(df_normal[cols].to_numpy())
-  df_quant = pd.DataFrame(data=x_scaled.reshape(df_normal["ADX_min"].count(), -1), columns=df_normal[cols].columns)  # train_y.values.ravel()
-  df_quant.insert(loc=0, column='candle_id', value=df_normal[df_normal.columns.values[0:1]].values)
-
-  fig.add_trace(go.Histogram(x=df_quant["op_hour"], nbinsx=bins), row=3, col=1)
-  fig.add_trace(go.Histogram(x=df_quant["RSI_min_70"], nbinsx=bins), row=3, col=2)
-  fig.add_trace(go.Histogram(x=df_quant["ADX_min"], nbinsx=bins), row=3, col=3)
-  fig.add_trace(go.Histogram(x=df_quant["сEMA_min"], nbinsx=bins), row=3, col=4)
+  fig.add_trace(go.Histogram(x=df_param["oc_min"], nbinsx=bins), row=3, col=1)
+  fig.add_trace(go.Histogram(x=df_param["DI_min"], nbinsx=bins), row=3, col=2)
+  fig.add_trace(go.Histogram(x=df_param["oc_hour"], nbinsx=bins), row=3, col=3)
+  fig.add_trace(go.Histogram(x=df_param["DI_hour"], nbinsx=bins), row=3, col=4)
 
   fig.show()
 
+  # df_normal.to_sql(name='normal', con=engine, if_exists='replace')
   df_normal.to_sql(name='normal', con=engine, if_exists='replace')
 
   print(tabulate(df_normal.iloc[20:25], headers='keys', tablefmt='psql'))

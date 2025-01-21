@@ -49,53 +49,124 @@ def cross(s_down, f_down, s_up, f_up):  # down должен пересекать
 
 
 def converter(row):
-  old_min, old_max = -1, 1
-  new_min, new_max = 0, 2
+  old_min, old_max = -5, 5
+  new_min, new_max = 0, 10
+
+  if old_max <= row["MACD"]:
+    macd = old_max
+  elif row["MACD"] <= old_min:
+    macd = old_min
+  else:
+    macd = row["MACD"]
+
+  if old_max <= row["MACD_signal"]:
+    macd_signal = old_max
+  elif row["MACD_signal"] <= old_min:
+    macd_signal = old_min
+  else:
+    macd_signal = row["MACD_signal"]
 
   old_range = old_max - old_min
   new_range = new_max - new_min
 
-  converted_one = ((row["MACD"] - old_min) * new_range / old_range) + new_min
-  converted_two = ((row["MACD_signal"] - old_min) * new_range / old_range) + new_min
+  converted_one = ((macd - old_min) * new_range / old_range) + new_min
+  converted_two = ((macd_signal - old_min) * new_range / old_range) + new_min
   return converted_one - converted_two
 
 
+def converter_abs(row):
+  val = converter(row)
+  return np.abs(val)
+
+
 def converter_multiplication(row):
-  old_min, old_max = -1, 1
-  new_min, new_max = 10, 20
+  old_min, old_max = -5, 5
+  new_min, new_max = 0, 10
+
+  if old_max <= row["MACD"]:
+    macd = old_max
+  elif row["MACD"] <= old_min:
+    macd = old_min
+  else:
+    macd = row["MACD"]
+
+  if old_max <= row["MACD_signal"]:
+    macd_signal = old_max
+  elif row["MACD_signal"] <= old_min:
+    macd_signal = old_min
+  else:
+    macd_signal = row["MACD_signal"]
 
   old_range = old_max - old_min
   new_range = new_max - new_min
 
-  converted_one = ((row["MACD"] - old_min) * new_range / old_range) + new_min
-  converted_two = ((row["MACD_signal"] - old_min) * new_range / old_range) + new_min
+  converted_one = ((macd - old_min) * new_range / old_range) + new_min
+  converted_two = ((macd_signal - old_min) * new_range / old_range) + new_min
+  return np.abs(converted_one / converted_two - 1)
   return np.abs(converted_one / converted_two - 1)
 
 
 def power_condition(row):
-  if row['cross_type'] == 0:  # Показатель может быть отрицательным сам по себе!
+  result = 0
+  minmax = 1.5
+  if row['cross_type'] == 0:
     if (row["tmp_power"] > 0):
-      return 0 + row["base_power"] * 3
+      result = 1 - np.sqrt(row["base_power"])
     elif (row["tmp_power"] < 0):
-      return 0 - row["base_power"] / 3
+      result = 0 - np.sqrt(row["base_power"])
   else:
     if row['cross_type'] == 1:
-      return 1 + row["base_power"] * 2
+      result = 1 + row["base_power"] * 2.6
     else:
-      return -1 - row["base_power"] * 2
+      result = -1 - row["base_power"]
+
+  if result <= -minmax:
+    result = -minmax
+  elif result >= minmax:
+    result = minmax
+  return result
 
 
 def power_condition_dis_balanced(row):
+  result = 0
+  minmax = 1.5
   if row['cross_type'] == 0:
     if (row["tmp_power"] > 0):
-      return 0 + row["base_power"] / 3
+      result = 1 - np.sqrt(row["base_power"]) * 6
     elif (row["tmp_power"] < 0):
-      return 0 - row["base_power"] / 3
+      result = 0 - np.sqrt(row["base_power"]) * 6
   else:
     if row['cross_type'] == 1:
-      return 1 + row["base_power"]
+      result = 1 + row["base_power"] * 15.6
     else:
-      return -1 - row["base_power"]
+      result = -1 - row["base_power"] * 15.6
+
+  if result <= -minmax:
+    result = -minmax
+  elif result >= minmax:
+    result = minmax
+  return result
+
+
+def adx_condition(row):
+  result = 0
+  minmax = 1.5
+  mult = 2.6
+  if row['ADX_pred'] == 0:
+    return np.nan
+  elif row['ADX'] >= 25:
+    if row['ADX'] > row['ADX_pred']:
+      result = 0 + np.sqrt(np.abs(row['ADX'] / row['ADX_pred'] - 1)) * mult
+    else:
+      result = 0 - np.sqrt(np.abs(row['ADX'] / row['ADX_pred'] - 1)) * mult
+  else:
+    result = 0 - np.sqrt(np.abs(row['ADX'] / row['ADX_pred'] - 1)) * mult
+
+  if result <= -minmax:
+    result = -minmax
+  elif result >= minmax:
+    result = minmax
+  return result
 
 
 def macd(df, type="min"):  # Нельзя гистограмму использовать, наверное
@@ -106,14 +177,16 @@ def macd(df, type="min"):  # Нельзя гистограмму использ�
   df["cross_type"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else 0, axis=1)
   df["tmp_power"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else np.nan, axis=1)
   df["tmp_power"] = df["tmp_power"].ffill()
-  df["base_power"] = np.abs(df["hist"])
-  # df["base_power"] = df.apply(converter_multiplication, axis=1)
+  # df["base_power"] = np.abs(df["hist"])
+  df["base_power"] = df.apply(converter_abs, axis=1)
   df["power"] = df.apply(power_condition, axis=1)
   # print(tabulate(df.loc[220:270], headers='keys', tablefmt='psql'))
   print("MACD:", df["power"].min(), df["power"].max())
-  print(df[df['base_power'] == df['base_power'].min()])
-  print(df[df['base_power'] == df['base_power'].max()])
-  print("MACD base_power:", df["base_power"].min(), df["base_power"].max())
+  # print(df[df['base_power'] == df['base_power'].min()])
+  # print(df[df['base_power'] == df['base_power'].max()])
+  # print(df[df['power'] == df['power'].min()])
+  # print(df[df['power'] == df['power'].max()])
+  # print("MACD base_power:", df["base_power"].min(), df["base_power"].max())
   df.rename(columns={"power": f"MACD_{type}"}, inplace=True)
   return (df[["id", f"MACD_{type}"]].copy())
 
@@ -129,7 +202,7 @@ def rsi(df, type="min", ass=70):
   df["tmp_power"] = df.apply(lambda row: -1 if (row["hist_pred"] > 0 and row["hist"] <= 0) else 1 if (row["hist_pred"] <= 0 and row["hist"] > 0) else np.nan, axis=1)
   df["tmp_power"] = df["tmp_power"].ffill()
   df["base_power"] = df.apply(lambda row: np.abs(np.mean([row["RSI_pred"], row["RSI"]]) / ass - 1), axis=1)
-  df["power"] = df.apply(power_condition_dis_balanced, axis=1)
+  df["power"] = df.apply(power_condition, axis=1)
 
   print("RSI:", df["power"].min(), df["power"].max())
   df.rename(columns={"power": f"RSI_{type}_{str(ass)}"}, inplace=True)
@@ -140,9 +213,7 @@ def adx(df, type="min"):  # Растущий и высокий тренд (бо�
   df.insert(loc=1, column='ADX_pred', value=df["ADX"].shift(1))
   df["ASS"] = 25
   df["base_power"] = df.apply(lambda row: np.nan if row['ADX_pred'] == 0 else np.abs(row['ADX'] / row['ADX_pred'] - 1), axis=1)
-  df["power"] = df.apply(
-      lambda row: np.nan if row['ADX_pred'] == 0 else 1 + (row['ADX'] / row['ADX_pred'] - 1) if row['ADX'] >= 25 else -1 - np.abs(row['ADX'] / row['ADX_pred'] - 1),
-      axis=1)
+  df["power"] = df.apply(adx_condition, axis=1)
 
   print("ADX:", df["power"].min(), df["power"].max())
   df.rename(columns={"power": f"ADX_{type}"}, inplace=True)
